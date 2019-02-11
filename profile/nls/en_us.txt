@@ -1,0 +1,11 @@
+# controller
+ND-controller-NAME = Holidays Google Controller
+CMD-ctl-DISCOVER-NAME = Re-Discover
+ST-ctl-ST-NAME = Holidays NodeServer Online
+
+# daynode
+ND-daynode-NAME = Day Node
+ST-day-ST-NAME = Day Off
+ST-day-GV0-NAME = Month
+ST-day-GV1-NAME = Day
+ST-day-GV2-NAME = Year

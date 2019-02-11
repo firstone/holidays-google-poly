@@ -1,0 +1,27 @@
+<nodeDefs>
+    <nodeDef id="controller" nls="ctl">
+        <editors />
+        <sts>
+			<st id="ST" editor="bool" />
+		</sts>
+        <cmds>
+            <sends />
+            <accepts>
+                <cmd id="DISCOVER" />
+            </accepts>
+        </cmds>
+    </nodeDef>
+    <nodeDef id="daynode" nls="day">
+        <editors />
+        <sts>
+            <st id="ST" editor="bool" />
+            <st id="GV0" editor="month" />
+            <st id="GV1" editor="day" />
+            <st id="GV2" editor="year" />
+        </sts>
+        <cmds>
+            <sends />
+            <accepts />
+        </cmds>
+    </nodeDef>
+</nodeDefs>

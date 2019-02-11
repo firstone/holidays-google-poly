@@ -1,0 +1,14 @@
+<editors>
+    <editor id="bool">
+        <range uom="2" subset="0,1" />
+    </editor>
+    <editor id="day">
+        <range uom="9" subset="1-31" />
+    </editor>
+    <editor id="month">
+        <range uom="47" subset="1-12" />
+    </editor>
+    <editor id="year">
+        <range uom="77" subset="1-9999" />
+    </editor>
+</editors>
