@@ -127,10 +127,10 @@ class Controller(polyinterface.Controller):
                     entry = CalendarEntry(calendar,
                         DayNode(self, self.address,
                             'today' + str(calendarIndex),
-                            calendar['summary'] + ' Today Node'),
+                            calendar['summary'] + ' Today'),
                         DayNode(self, self.address,
                             'tmrow' + str(calendarIndex),
-                            calendar['summary'] + ' Tomorrow Node'))
+                            calendar['summary'] + ' Tomorrow'))
                     self.calendars.append(entry)
                     self.addNode(entry.todayNode)
                     self.addNode(entry.tomorrowNode)
