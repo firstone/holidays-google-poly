@@ -25,9 +25,11 @@ class Controller(polyinterface.Controller):
         self.calendarList = []
         self.service = None
         self.credentials = None
+        self.isStarted = False
+        self.config = None
 
-    def discover(self):
-        pass
+    def discover(self, *args, **kwargs):
+        self.refresh()
 
     def start(self):
         params = [
@@ -69,6 +71,11 @@ class Controller(polyinterface.Controller):
                 return
 
         self.openService()
+        LOGGER.debug('Google API Connection opened')
+        self.isStarted = True
+        if self.config is not None:
+            self.process_config(self.config)
+            self.config = None
         self.refresh()
 
     def openService(self):
@@ -81,6 +88,9 @@ class Controller(polyinterface.Controller):
             LOGGER.error('Error refreshing calendars: %s', e)
 
     def refresh(self):
+        if not self.isStarted:
+            return
+
         if self.currentDate != datetime.date.today():
             self.currentDate = datetime.date.today()
             for entry in self.calendars:
@@ -115,7 +125,13 @@ class Controller(polyinterface.Controller):
             'date' in event['end'])
 
     def process_config(self, config):
+        if not self.isStarted:
+            self.config = config
+            return
+
         typedConfig = config.get('typedCustomData')
+        if typedConfig is None:
+            return
 
         if self.service is None:
             if len(typedConfig.get('token')) == 0:
