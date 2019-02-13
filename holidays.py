@@ -4,7 +4,7 @@ import click
 import datetime
 import dateutil.parser
 from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
+from google_auth_oauthlib.flow import Flow
 from google.auth.transport.requests import Request
 import os
 import pickle
@@ -23,6 +23,8 @@ class Controller(polyinterface.Controller):
         self.currentDate = None
         self.poly.onConfig(self.process_config)
         self.calendarList = []
+        self.service = None
+        self.credentials = None
 
     def discover(self):
         pass
@@ -35,34 +37,48 @@ class Controller(polyinterface.Controller):
                 'desc': 'Name of the calendar in Google Calendar',
                 'isRequired': True,
                 'isList': True
+            },
+            {
+                'name': 'token',
+                'title': 'Google Authentication Token',
+                'desc': 'Obtain token by visiting authentication URL',
+                'isRequired': True
             }
         ]
         self.poly.save_typed_params(params)
 
         LOGGER.info('Started HolidayGoogle Server')
 
-        creds = None
         if os.path.exists('token.pickle'):
             with open('token.pickle', 'rb') as token:
-                creds = pickle.load(token)
+                self.credentials = pickle.load(token)
 
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
+        if not self.credentials or not self.credentials.valid:
+            if (self.credentials and self.credentials.expired and
+                self.credentials.refresh_token):
+                self.credentials.refresh(Request())
             else:
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    'credentials.json', Controller.SCOPES)
-                creds = flow.run_local_server()
+                self.flow = Flow.from_client_secrets_file(
+                    'credentials.json', Controller.SCOPES,
+                    redirect_uri='urn:ietf:wg:oauth:2.0:oob')
 
-            with open('token.pickle', 'wb') as token:
-                pickle.dump(creds, token)
+                authURL, _ = self.flow.authorization_url(prompt='consent')
 
-        self.service = build('calendar', 'v3', credentials=creds)
+                self.addNotice('Authenticate by visiting <a href="' +
+                    authURL + '">Authentication Link</a>', 'auth')
+                return
 
+        self.openService()
         self.refresh()
+
+    def openService(self):
+        self.service = build('calendar', 'v3', credentials=self.credentials)
 
     def longPoll(self):
-        self.refresh()
+        try:
+            self.refresh()
+        except Exception as e:
+            LOGGER.error('Error refreshing calendars: %s', e)
 
     def refresh(self):
         if self.currentDate != datetime.date.today():
@@ -99,6 +115,23 @@ class Controller(polyinterface.Controller):
             'date' in event['end'])
 
     def process_config(self, config):
+        typedConfig = config.get('typedCustomData')
+
+        if self.service is None:
+            if len(typedConfig.get('token')) == 0:
+                return
+
+            try:
+                self.flow.fetch_token(code=typedConfig.get('token'))
+                with open('token.pickle', 'wb') as token:
+                    pickle.dump(self.flow.credentials, token)
+                self.credentials = self.flow.credentials
+                self.openService()
+                self.removeNotice('auth')
+            except Exception as e:
+                LOGGER.error('Error getting credentials: %s', e)
+                return
+
         self.calendars = []
         self.currentDate = None
 
@@ -107,13 +140,11 @@ class Controller(polyinterface.Controller):
         while True:
             list = self.service.calendarList().list(pageToken=pageToken).execute()
             for listEntry in list['items']:
-                LOGGER.debug('Found calendar %s %s', listEntry['summary'], listEntry)
+                # LOGGER.debug('Found calendar %s %s', listEntry['summary'], listEntry)
                 calendarList[listEntry['summary']] = listEntry
                 pageToken = list.get('nextPageToken')
             if not pageToken:
                 break
-
-        typedConfig = config.get('typedCustomData')
 
         list = typedConfig.get('calendarName')
         calendarIndex = 0
