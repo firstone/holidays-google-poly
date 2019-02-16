@@ -31,6 +31,9 @@ class Controller(polyinterface.Controller):
     def discover(self, *args, **kwargs):
         self.refresh()
 
+    def query(self):
+        super(Controller, self).query()
+
     def start(self):
         params = [
             {
@@ -43,12 +46,12 @@ class Controller(polyinterface.Controller):
             {
                 'name': 'token',
                 'title': 'Google Authentication Token',
-                'desc': 'Obtain token by visiting authentication URL',
-                'isRequired': True
+                'desc': 'Obtain token by visiting authentication URL'
             }
         ]
         self.poly.save_typed_params(params)
 
+        self.setDriver('ST', 1)
         LOGGER.info('Started HolidayGoogle Server')
 
         if os.path.exists('token.pickle'):
@@ -195,7 +198,7 @@ class Controller(polyinterface.Controller):
         self.refresh()
 
     id = 'controller'
-    commands = {'DISCOVER': discover}
+    commands = { 'DISCOVER': discover, 'QUERY': query }
     drivers = [{ 'driver': 'ST', 'value': 0, 'uom': 2 }]
 
 

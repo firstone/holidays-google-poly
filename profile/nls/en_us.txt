@@ -1,6 +1,7 @@
 # controller
 ND-controller-NAME = Holidays Google Controller
 CMD-ctl-DISCOVER-NAME = Re-Discover
+CMD-ctl-QUERY-NAME = Query
 ST-ctl-ST-NAME = Holidays NodeServer Online
 
 # daynode
