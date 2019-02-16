@@ -74,8 +74,8 @@ class Controller(polyinterface.Controller):
                 return
 
         self.openService()
-        LOGGER.debug('Google API Connection opened')
         self.isStarted = True
+
         if self.config is not None:
             self.process_config(self.config)
             self.config = None
@@ -83,6 +83,7 @@ class Controller(polyinterface.Controller):
 
     def openService(self):
         self.service = build('calendar', 'v3', credentials=self.credentials)
+        LOGGER.debug('Google API Connection opened')
 
     def longPoll(self):
         try:
@@ -134,10 +135,12 @@ class Controller(polyinterface.Controller):
 
         typedConfig = config.get('typedCustomData')
         if typedConfig is None:
+            LOGGER.info('Config is not set')
             return
 
         if self.service is None:
             if len(typedConfig.get('token')) == 0:
+                LOGGER.warn('Token is not set')
                 return
 
             try:
@@ -151,6 +154,7 @@ class Controller(polyinterface.Controller):
                 LOGGER.error('Error getting credentials: %s', e)
                 return
 
+        LOGGER.debug('Reading calendar configuration')
         self.calendars = []
         self.currentDate = None
 
