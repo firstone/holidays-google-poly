@@ -71,6 +71,7 @@ class Controller(polyinterface.Controller):
 
                 self.addNotice('Authenticate by visiting <a href="' +
                     authURL + '">Authentication Link</a>', 'auth')
+                self.isStarted = True
                 return
 
         self.openService()
