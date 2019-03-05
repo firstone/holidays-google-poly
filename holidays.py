@@ -20,7 +20,6 @@ class Controller(polyinterface.Controller):
     def __init__(self, polyglot):
         super(Controller, self).__init__(polyglot)
         self.calendars = []
-        self.currentDate = None
         self.poly.onConfig(self.process_config)
         self.calendarList = []
         self.service = None
@@ -96,19 +95,15 @@ class Controller(polyinterface.Controller):
         if not self.isStarted:
             return
 
-        if self.currentDate != datetime.date.today():
-            self.currentDate = datetime.date.today()
-            for entry in self.calendars:
-                entry.todayNode.setDate(self.currentDate)
-                entry.tomorrowNode.setDate(self.currentDate +
-                    datetime.timedelta(days=1))
-
         for entry in self.calendars:
             calendar = entry.calendar
             LOGGER.debug('Checking calendar %s', calendar['summary'])
             todayDate = datetime.datetime.now(pytz.timezone(calendar['timeZone']))
             todayDate = todayDate.replace(hour=0, minute=0, second=0, microsecond=0)
+            tomorrowDate = todayDate + datetime.timedelta(days=1)
             endDate = todayDate + datetime.timedelta(days=2)
+            entry.todayNode.setDate(todayDate)
+            entry.tomorrowNode.setDate(tomorrowDate)
             result = self.service.events().list(calendarId=calendar['id'],
                 timeMin=todayDate.isoformat(), singleEvents=True,
                 timeMax=endDate.isoformat()).execute()
@@ -157,7 +152,6 @@ class Controller(polyinterface.Controller):
 
         LOGGER.debug('Reading calendar configuration')
         self.calendars = []
-        self.currentDate = None
 
         calendarList = {}
         pageToken = None
@@ -218,11 +212,14 @@ class DayNode(polyinterface.Node):
     def __init__(self, primary, controllerAddress, address, name):
         super(DayNode, self).__init__(primary, controllerAddress, address, name)
         self.futureState = False
+        self.currentDate = None
 
     def setDate(self, date):
-        self.setDriver('GV0', date.month)
-        self.setDriver('GV1', date.day)
-        self.setDriver('GV2', date.year)
+        if self.currentDate != date:
+            self.currentDate = date
+            self.setDriver('GV0', date.month)
+            self.setDriver('GV1', date.day)
+            self.setDriver('GV2', date.year)
 
     def setFutureState(self):
         self.futureState = True
