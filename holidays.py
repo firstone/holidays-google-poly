@@ -97,10 +97,10 @@ class Controller(polyinterface.Controller):
 
         for entry in self.calendars:
             calendar = entry.calendar
-            LOGGER.debug('Checking calendar %s', calendar['summary'])
             todayDate = datetime.datetime.now(pytz.timezone(calendar['timeZone']))
             todayDate = todayDate.replace(hour=0, minute=0, second=0, microsecond=0)
-            tomorrowDate = todayDate + datetime.timedelta(days=1)
+            tomorrowDate = todayDate + datetime.timedelta(days=1 )
+            LOGGER.debug(f'Checking calendar {calendar["summary"]} in time zone {calendar["timeZone"]} using date {todayDate}')
             endDate = todayDate + datetime.timedelta(days=2)
             entry.todayNode.setDate(todayDate)
             entry.tomorrowNode.setDate(tomorrowDate)
@@ -109,7 +109,7 @@ class Controller(polyinterface.Controller):
                 timeMax=endDate.isoformat()).execute()
             for event in result.get('items', []):
                 if self.is_holiday(event):
-                    LOGGER.debug('Event found %s', event['summary'])
+                    LOGGER.debug(f'Event found {event["summary"]}, {event["start"]}, {event["end"]}')
                     date = dateutil.parser.parse(event['start']['date']).date()
 
                     if date == todayDate.date():
@@ -158,7 +158,7 @@ class Controller(polyinterface.Controller):
         while True:
             list = self.service.calendarList().list(pageToken=pageToken).execute()
             for listEntry in list['items']:
-                # LOGGER.debug('Found calendar %s %s', listEntry['summary'], listEntry)
+                LOGGER.debug(f'Found calendar {listEntry["summary"]}')
                 calendarList[listEntry['summary']] = listEntry
                 pageToken = list.get('nextPageToken')
             if not pageToken:
